@@ -1,0 +1,81 @@
+local State = {
+	new = function()
+		return { 
+			Position = 0.0,
+			Velocity = 0.0,
+		}
+	end
+}
+
+local Derivative = {
+	new = function()
+		return { 
+			Position = 0.0,
+			Velocity = 0.0,
+		}
+	end
+}
+
+local function Acceleration(state, timeElapsed)
+	local k = 15.0
+	local b = 0.1
+	
+	return -k * state.Position - b * state.Velocity * timeElapsed
+end
+
+-- It says Derivative evaluate in the C++ implementation but am confused if that's relevant in Lua?
+
+local function Evaluate(initialState, timeElapsed, deltaTime, derivative)	
+	local state = State.new()
+	state.Position = initialState.Position + derivative.Position*deltaTime
+	state.Velocity = initialState.Velocity + derivative.Velocity*deltaTime
+
+	local output = Derivative.new()
+	output.Position = state.Velocity
+	output.Velocity = Acceleration(state, timeElapsed + deltaTime)
+	return output
+end
+
+local function Integrate(state, timeElapsed, deltaTime)	
+	local a = Evaluate(state, timeElapsed, 0.0, Derivative.new())
+	local b = Evaluate(state, timeElapsed, deltaTime*0.5, a)
+	local c = Evaluate(state, timeElapsed, deltaTime*0.5, b)
+	local d = Evaluate(state, timeElapsed, deltaTime, c)
+	
+	local derivativePosition = 1.0 / 6.0 * 
+		(a.Position + 2.0 * (b.Position + c.Position) + d.Position)
+		
+	local derivativeVelocity = 1.0 / 6.0 * 
+		(a.Velocity + 2.0 * (b.Velocity + c.Velocity) + d.Velocity)
+		
+	print(derivativePosition, derivativeVelocity)
+		
+	state.Position = state.Position + derivativePosition * deltaTime
+	state.Velocity = state.Velocity + derivativeVelocity * deltaTime
+end
+
+local Node = workspace.Node
+
+local function Render(state)
+	print(
+		string.format("%s %s", "Position:", state.Position),
+		string.format("%s %s", "Velocity:", state.Velocity)
+	)
+	
+	Node.Position = Vector3.new(0, 0, state.Position)
+end
+
+local TimeElapsed = 0.0
+local DeltaTime = 1.0 / 60.0
+
+local CurrentState = State.new()
+CurrentState.Position = 1
+CurrentState.Velocity = 1
+
+while true do
+	Integrate(CurrentState, TimeElapsed, DeltaTime)
+	Render(CurrentState)
+	TimeElapsed = TimeElapsed + DeltaTime
+	
+	game:GetService("RunService").Stepped:Wait()
+end
