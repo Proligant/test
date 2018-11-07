@@ -10,8 +10,8 @@ local State = {
 local Derivative = {
 	new = function()
 		return { 
-			Position = 0.0,
-			Velocity = 0.0,
+			DerivativePosition = 0.0,
+			DerivativeVelocity = 0.0,
 		}
 	end
 }
@@ -27,12 +27,12 @@ end
 
 local function Evaluate(initialState, timeElapsed, deltaTime, derivative)	
 	local state = State.new()
-	state.Position = initialState.Position + derivative.Position*deltaTime
-	state.Velocity = initialState.Velocity + derivative.Velocity*deltaTime
+	state.Position = initialState.Position + derivative.DerivativePosition*deltaTime
+	state.Velocity = initialState.Velocity + derivative.DerivativeVelocity*deltaTime
 
 	local output = Derivative.new()
-	output.Position = state.Velocity
-	output.Velocity = Acceleration(state, timeElapsed + deltaTime)
+	output.DerivativePosition = state.Velocity
+	output.DerivatveVelocity = Acceleration(state, timeElapsed + deltaTime)
 	return output
 end
 
@@ -43,10 +43,10 @@ local function Integrate(state, timeElapsed, deltaTime)
 	local d = Evaluate(state, timeElapsed, deltaTime, c)
 	
 	local derivativePosition = 1.0 / 6.0 * 
-		(a.Position + 2.0 * (b.Position + c.Position) + d.Position)
+		(a.DerivativePosition + 2.0 * (b.DerivativePosition + c.DerivativePosition) + d.DerivativePosition)
 		
 	local derivativeVelocity = 1.0 / 6.0 * 
-		(a.Velocity + 2.0 * (b.Velocity + c.Velocity) + d.Velocity)
+		(a.DerivativeVelocity + 2.0 * (b.DerivativeVelocity + c.DerivativeVelocity) + d.DerivativeVelocity)
 		
 	print(derivativePosition, derivativeVelocity)
 		
@@ -79,3 +79,4 @@ while true do
 	
 	game:GetService("RunService").Stepped:Wait()
 end
+
